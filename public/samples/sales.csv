@@ -1,0 +1,13 @@
+week,price,promotion,temperature,holiday,demand
+1,12.5,no,8,false,120
+2,12.5,no,10,false,128
+3,11.9,yes,12,false,174
+4,11.9,yes,14,true,205
+5,12.8,no,17,false,139
+6,12.8,no,20,false,145
+7,12.2,yes,23,false,191
+8,12.2,yes,26,true,224
+9,13.1,no,24,false,151
+10,13.1,no,19,false,137
+11,12.4,yes,15,false,182
+12,12.4,no,11,true,168

@@ -1,0 +1,3 @@
+export type StandardScalerState={type:'StandardScaler';column:string;mean:number;standardDeviation:number};
+export const fitScaler=(column:string,values:unknown[]):StandardScalerState=>{const ns=values.filter(v=>v!==null&&v!==undefined&&v!=='').map(Number).filter(Number.isFinite);const mean=ns.reduce((a,b)=>a+b,0)/Math.max(1,ns.length);const sd=Math.sqrt(ns.reduce((a,n)=>a+(n-mean)**2,0)/Math.max(1,ns.length))||1;return{type:'StandardScaler',column,mean,standardDeviation:sd}};
+export const scale=(v:unknown,s:StandardScalerState)=>{const n=v===null||v===undefined||v===''?s.mean:Number(v);return((Number.isFinite(n)?n:s.mean)-s.mean)/(s.standardDeviation||1)};

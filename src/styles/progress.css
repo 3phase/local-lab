@@ -1,0 +1,54 @@
+.parse-progress {
+  width: min(360px, 80%);
+  height: 8px;
+  margin: 26px auto 0;
+  background: #dfe3dc;
+  border-radius: 9px;
+  overflow: hidden;
+}
+.parse-progress i {
+  display: block;
+  height: 100%;
+  background: var(--purple);
+  border-radius: inherit;
+  transition: width 0.25s ease;
+}
+
+.training-progress-row {
+  display: grid;
+  grid-template-columns: 1fr 48px;
+  align-items: center;
+  gap: 14px;
+  margin: -4px 0 24px;
+}
+
+.training-progress-row > b {
+  font: 500 12px "DM Mono", monospace;
+  text-align: right;
+}
+
+.training-progress {
+  height: 12px;
+  overflow: hidden;
+  background: #e5e8e3;
+  border: 1px solid #d4d9d3;
+  border-radius: 999px;
+}
+
+.training-progress i {
+  display: block;
+  height: 100%;
+  background: linear-gradient(90deg, var(--purple), #9d90ff);
+  border-radius: inherit;
+  transition: width 0.3s ease;
+}
+
+.training-progress.completed i {
+  background: linear-gradient(90deg, #78b82a, var(--lime));
+}
+
+.training-progress.stopped i,
+.training-progress.stopping i,
+.training-progress.failed i {
+  background: #d58a49;
+}
