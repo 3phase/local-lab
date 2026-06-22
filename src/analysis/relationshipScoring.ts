@@ -5,17 +5,13 @@ import {
   cramersV,
   pearsonCorrelation,
   pointBiserialCorrelation,
-  spearmanCorrelation,
+  spearmanCorrelation
 } from "./correlation";
 import { leakageWarnings } from "./leakageDetection";
-import type {
-  FieldRelationship,
-  RelationshipStrength,
-  SuggestedAction,
-} from "./correlationTypes";
+import type { FieldRelationship, RelationshipStrength, SuggestedAction } from "./correlationTypes";
 
 const strength = (
-  score: number | null,
+  score: number | null
 ): RelationshipStrength | "not_analyzed" =>
   score == null
     ? "not_analyzed"
@@ -29,7 +25,7 @@ const strength = (
             ? "strong"
             : "very_strong";
 const action = (
-  value: RelationshipStrength | "not_analyzed",
+  value: RelationshipStrength | "not_analyzed"
 ): SuggestedAction =>
   value === "not_analyzed" || value === "very_weak"
     ? "probably_ignore"
@@ -50,7 +46,7 @@ const groupedMeans = (groups: unknown[], values: unknown[]) => {
     [...map]
       .sort((a, b) => b[1].length - a[1].length)
       .slice(0, 8)
-      .map(([key, items]) => [key, mean(items)]),
+      .map(([key, items]) => [key, mean(items)])
   );
 };
 const topCombinations = (fields: unknown[], targets: unknown[]) => {
@@ -63,7 +59,7 @@ const topCombinations = (fields: unknown[], targets: unknown[]) => {
   return [...counts]
     .sort((a, b) => b[1] - a[1])
     .slice(0, 8)
-    .map(([combination, count]) => ({ combination, count }));
+    .map(([combination, count]) => ({combination, count}));
 };
 
 export function recommendedFieldNames(relationships: FieldRelationship[]) {
@@ -76,7 +72,7 @@ export function analyzeRelationships(
   rows: Record<string, unknown>[],
   columns: ColumnProfile[],
   targetName: string,
-  taskType: TaskType,
+  taskType: TaskType
 ): FieldRelationship[] {
   const target = columns.find((c) => c.name === targetName);
   if (!target) return [];
@@ -105,7 +101,7 @@ export function analyzeRelationships(
           : 0,
         uniqueValues: field.uniqueValues,
         suggestedAction: "probably_ignore",
-        warnings: [],
+        warnings: []
       };
       if (field.inferredType === "date") {
         base.suggestedAction = "review_manually";
@@ -118,7 +114,7 @@ export function analyzeRelationships(
       }
       if (treatAsCategory && field.uniqueValues > 100) {
         base.warnings.push(
-          "High-cardinality categorical field was not analyzed.",
+          "High-cardinality categorical field was not analyzed."
         );
         base.suggestedAction = "review_manually";
         return base;
@@ -134,7 +130,7 @@ export function analyzeRelationships(
           Math.abs(raw) < 0.1 ? "none" : raw > 0 ? "positive" : "negative";
         details = {
           absolutePearson: Math.abs(raw),
-          spearman: spearmanCorrelation(fieldValues, targetValues),
+          spearman: spearmanCorrelation(fieldValues, targetValues)
         };
       } else if (
         field.inferredType === "number" &&
@@ -146,11 +142,11 @@ export function analyzeRelationships(
         base.direction =
           Math.abs(raw) < 0.1 ? "none" : raw > 0 ? "positive" : "negative";
         const labels = [
-          ...new Set(targetValues.filter((v) => v != null).map(String)),
+          ...new Set(targetValues.filter((v) => v != null).map(String))
         ].sort();
         details = {
           classMeans: groupedMeans(targetValues, fieldValues),
-          higherValuesAssociatedWith: raw >= 0 ? labels[1] : labels[0],
+          higherValuesAssociatedWith: raw >= 0 ? labels[1] : labels[0]
         };
       } else if (
         field.inferredType === "number" &&
@@ -159,13 +155,13 @@ export function analyzeRelationships(
         raw = anovaFScore(fieldValues, targetValues);
         base.method = "anova_f_score";
         base.direction = "not_applicable";
-        details = { classMeans: groupedMeans(targetValues, fieldValues) };
+        details = {classMeans: groupedMeans(targetValues, fieldValues)};
       } else if (treatAsCategory && taskType === "regression") {
         raw = correlationRatio(fieldValues, targetValues);
         normalized = raw;
         base.method = "correlation_ratio";
         base.direction = "not_applicable";
-        details = { categoryMeans: groupedMeans(fieldValues, targetValues) };
+        details = {categoryMeans: groupedMeans(fieldValues, targetValues)};
       } else if (treatAsCategory) {
         raw = cramersV(fieldValues, targetValues);
         normalized = raw;
@@ -176,19 +172,19 @@ export function analyzeRelationships(
           targetRateByCategory:
             taskType === "binary_classification"
               ? groupedMeans(
-                  fieldValues,
-                  targetValues.map((v) =>
-                    Number(
-                      String(v) ===
-                        [
-                          ...new Set(
-                            targetValues.filter((x) => x != null).map(String),
-                          ),
-                        ].sort()[1],
-                    ),
-                  ),
+                fieldValues,
+                targetValues.map((v) =>
+                  Number(
+                    String(v) ===
+                    [
+                      ...new Set(
+                        targetValues.filter((x) => x != null).map(String)
+                      )
+                    ].sort()[1]
+                  )
                 )
-              : undefined,
+              )
+              : undefined
         };
       }
       base.rawScore = Number.isFinite(raw) ? raw : 0;
@@ -207,7 +203,7 @@ export function analyzeRelationships(
       (r.normalizedScore =
         anova.length === 1
           ? Math.min(1, (r.rawScore ?? 0) / ((r.rawScore ?? 0) + 10))
-          : (anova.length - index) / anova.length),
+          : (anova.length - index) / anova.length)
   );
   for (const relationship of results) {
     relationship.strength = strength(relationship.normalizedScore);
@@ -220,7 +216,7 @@ export function analyzeRelationships(
       targetName,
       relationship,
       rows.map((r) => r[relationship.fieldName]),
-      targetValues,
+      targetValues
     );
     relationship.warnings.push(...warnings);
     if (warnings.length) relationship.suggestedAction = "possible_leakage";
@@ -228,6 +224,6 @@ export function analyzeRelationships(
   return results.sort(
     (a, b) =>
       (b.normalizedScore ?? -1) - (a.normalizedScore ?? -1) ||
-      a.fieldName.localeCompare(b.fieldName),
+      a.fieldName.localeCompare(b.fieldName)
   );
 }

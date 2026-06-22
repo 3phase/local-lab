@@ -113,5 +113,5 @@ export const defaultConfig: ModelConfig = {
   earlyStopping: true,
   earlyStoppingPatience: 10,
   validationSplit: 0.2,
-  seed: 42,
+  seed: 42
 };

@@ -1,8 +1,5 @@
 import { useMemo, useState } from "react";
-import type {
-  FieldRelationship,
-  SuggestedAction,
-} from "../../analysis/correlationTypes";
+import type { FieldRelationship, SuggestedAction } from "../../analysis/correlationTypes";
 import { Card } from "../layout/AppShell";
 
 const labels: Record<SuggestedAction, string> = {
@@ -10,7 +7,7 @@ const labels: Record<SuggestedAction, string> = {
   weak_signal: "Weak signal",
   probably_ignore: "Probably ignore",
   review_manually: "Review manually",
-  possible_leakage: "Possible leakage",
+  possible_leakage: "Possible leakage"
 };
 const methodLabels: Record<FieldRelationship["method"], string> = {
   pearson: "Pearson correlation",
@@ -19,7 +16,7 @@ const methodLabels: Record<FieldRelationship["method"], string> = {
   anova_f_score: "ANOVA F-score",
   cramers_v: "Cramér’s V",
   correlation_ratio: "Correlation ratio",
-  not_analyzed: "Not analyzed",
+  not_analyzed: "Not analyzed"
 };
 const explanations: Record<FieldRelationship["method"], string> = {
   pearson:
@@ -34,24 +31,24 @@ const explanations: Record<FieldRelationship["method"], string> = {
   correlation_ratio:
     "Measures how much a numeric target differs across categories.",
   not_analyzed:
-    "This field type is not analyzed automatically in the first version.",
+    "This field type is not analyzed automatically in the first version."
 };
 const pretty = (value: unknown): string =>
   typeof value === "number"
     ? Number(value).toFixed(3)
     : typeof value === "object" && value
       ? Object.entries(value as Record<string, unknown>)
-          .map(([k, v]) => `${k}: ${pretty(v)}`)
-          .join(" · ")
+        .map(([k, v]) => `${k}: ${pretty(v)}`)
+        .join(" · ")
       : String(value ?? "—");
 
 export function FieldCorrelationStep({
-  relationships,
-  loading,
-  onUseRecommended,
-  onIgnoreWeak,
-  onContinue,
-}: {
+                                       relationships,
+                                       loading,
+                                       onUseRecommended,
+                                       onIgnoreWeak,
+                                       onContinue
+                                     }: {
   relationships: FieldRelationship[];
   loading: boolean;
   onUseRecommended: () => void;
@@ -67,9 +64,9 @@ export function FieldCorrelationStep({
           ? a.fieldName.localeCompare(b.fieldName)
           : sort === "missing"
             ? b.missingPercentage - a.missingPercentage
-            : (b.normalizedScore ?? -1) - (a.normalizedScore ?? -1),
+            : (b.normalizedScore ?? -1) - (a.normalizedScore ?? -1)
       ),
-    [relationships, sort],
+    [relationships, sort]
   );
   const detail =
     relationships.find((r) => r.fieldName === selected) ?? relationships[0];
@@ -80,10 +77,10 @@ export function FieldCorrelationStep({
       .filter((r) => r.direction === "negative")
       .sort((a, b) => (b.normalizedScore ?? 0) - (a.normalizedScore ?? 0))[0];
   const recommended = relationships.filter(
-      (r) => r.suggestedAction === "recommended",
+      (r) => r.suggestedAction === "recommended"
     ).length,
     leakage = relationships.filter(
-      (r) => r.suggestedAction === "possible_leakage",
+      (r) => r.suggestedAction === "possible_leakage"
     ).length;
   return (
     <Card className="correlation-step">
@@ -161,8 +158,8 @@ export function FieldCorrelationStep({
                   onClick={() =>
                     setSelected(
                       relationships.find(
-                        (r) => r.suggestedAction === "possible_leakage",
-                      )?.fieldName ?? null,
+                        (r) => r.suggestedAction === "possible_leakage"
+                      )?.fieldName ?? null
                     )
                   }
                 >
@@ -175,52 +172,52 @@ export function FieldCorrelationStep({
             <div className="table-wrap correlation-table">
               <table>
                 <thead>
-                  <tr>
-                    <th>Field</th>
-                    <th>Type</th>
-                    <th>Score</th>
-                    <th>Method</th>
-                    <th>Direction</th>
-                    <th>Missing</th>
-                    <th>Unique</th>
-                    <th>Suggested action</th>
-                  </tr>
+                <tr>
+                  <th>Field</th>
+                  <th>Type</th>
+                  <th>Score</th>
+                  <th>Method</th>
+                  <th>Direction</th>
+                  <th>Missing</th>
+                  <th>Unique</th>
+                  <th>Suggested action</th>
+                </tr>
                 </thead>
                 <tbody>
-                  {sorted.map((r) => (
-                    <tr
-                      key={r.fieldName}
-                      className={`${selected === r.fieldName ? "selected" : ""} ${r.suggestedAction === "possible_leakage" ? "leakage-row" : ""}`}
-                      onClick={() => setSelected(r.fieldName)}
-                    >
-                      <td>
-                        <b>{r.fieldName}</b>
-                        {r.warnings.length > 0 && (
-                          <em title={r.warnings.join(" ")}>!</em>
-                        )}
-                      </td>
-                      <td>{r.fieldType}</td>
-                      <td>
-                        <div className="signal-score">
-                          <i
-                            style={{
-                              width: `${(r.normalizedScore ?? 0) * 100}%`,
-                            }}
-                          />
-                          <b>{r.normalizedScore?.toFixed(2) ?? "—"}</b>
-                        </div>
-                      </td>
-                      <td>{methodLabels[r.method]}</td>
-                      <td>{r.direction.replace("_", " ")}</td>
-                      <td>{r.missingPercentage.toFixed(1)}%</td>
-                      <td>{r.uniqueValues}</td>
-                      <td>
+                {sorted.map((r) => (
+                  <tr
+                    key={r.fieldName}
+                    className={`${selected === r.fieldName ? "selected" : ""} ${r.suggestedAction === "possible_leakage" ? "leakage-row" : ""}`}
+                    onClick={() => setSelected(r.fieldName)}
+                  >
+                    <td>
+                      <b>{r.fieldName}</b>
+                      {r.warnings.length > 0 && (
+                        <em title={r.warnings.join(" ")}>!</em>
+                      )}
+                    </td>
+                    <td>{r.fieldType}</td>
+                    <td>
+                      <div className="signal-score">
+                        <i
+                          style={{
+                            width: `${(r.normalizedScore ?? 0) * 100}%`
+                          }}
+                        />
+                        <b>{r.normalizedScore?.toFixed(2) ?? "—"}</b>
+                      </div>
+                    </td>
+                    <td>{methodLabels[r.method]}</td>
+                    <td>{r.direction.replace("_", " ")}</td>
+                    <td>{r.missingPercentage.toFixed(1)}%</td>
+                    <td>{r.uniqueValues}</td>
+                    <td>
                         <span className={`action-badge ${r.suggestedAction}`}>
                           {labels[r.suggestedAction]}
                         </span>
-                      </td>
-                    </tr>
-                  ))}
+                    </td>
+                  </tr>
+                ))}
                 </tbody>
               </table>
             </div>

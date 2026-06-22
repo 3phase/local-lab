@@ -1,4 +1,5 @@
 import type { FieldRelationship } from "./correlationTypes";
+
 const suspicious = [
   "result",
   "outcome",
@@ -10,11 +11,11 @@ const suspicious = [
   "winner",
   "price_paid",
   "booked",
-  "converted",
+  "converted"
 ];
 const clean = (value: string) => value.toLowerCase().replace(/[^a-z0-9]/g, "");
 const distance = (a: string, b: string) => {
-  const row = Array.from({ length: b.length + 1 }, (_, i) => i);
+  const row = Array.from({length: b.length + 1}, (_, i) => i);
   for (let i = 1; i <= a.length; i++) {
     let previous = row[0];
     row[0] = i;
@@ -23,19 +24,20 @@ const distance = (a: string, b: string) => {
       row[j] = Math.min(
         row[j] + 1,
         row[j - 1] + 1,
-        previous + (a[i - 1] === b[j - 1] ? 0 : 1),
+        previous + (a[i - 1] === b[j - 1] ? 0 : 1)
       );
       previous = old;
     }
   }
   return row[b.length];
 };
+
 export function leakageWarnings(
   fieldName: string,
   targetName: string,
   relationship: FieldRelationship,
   fieldValues: unknown[],
-  targetValues: unknown[],
+  targetValues: unknown[]
 ) {
   const warnings: string[] = [];
   const f = clean(fieldName),
@@ -48,7 +50,7 @@ export function leakageWarnings(
     warnings.push("Field name is very similar to the target name.");
   if (suspicious.some((word) => fieldName.toLowerCase().includes(word)))
     warnings.push(
-      "Field name contains a term commonly associated with outcomes.",
+      "Field name contains a term commonly associated with outcomes."
     );
   const comparable = fieldValues
     .map((v, i) => [v, targetValues[i]])

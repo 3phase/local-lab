@@ -1,2 +1,33 @@
-import * as tf from '@tensorflow/tfjs';import type {LayersModel} from '@tensorflow/tfjs';import type {EvaluationResult,TaskType} from '../data/datasetTypes';import type {LabelEncoderState} from '../preprocessing/LabelEncoder';import {classificationMetrics,regressionMetrics} from './metrics';
-export async function evaluateModel(model:LayersModel,x:number[][],actual:number[],task:TaskType,le:LabelEncoderState|null):Promise<EvaluationResult>{const xs=tf.tensor2d(x);const output=model.predict(xs) as tf.Tensor;const raw=await output.array() as number[][];tf.dispose([xs,output]);if(task==='regression'){const p=raw.map(r=>r[0]);return{metrics:regressionMetrics(actual,p),examples:actual.slice(0,50).map((a,i)=>({actual:a,predicted:p[i],error:p[i]-a}))}}const probs=task==='binary_classification'?raw.map(r=>[1-r[0],r[0]]):raw;const pred=probs.map(r=>r.indexOf(Math.max(...r)));const m=classificationMetrics(actual,pred,le!.labels.length);return{metrics:{accuracy:m.accuracy,f1:m.f1},confusionMatrix:m.confusionMatrix,labels:le!.labels,examples:actual.slice(0,50).map((a,i)=>({actual:le!.indexToLabel[a],predicted:le!.indexToLabel[pred[i]],confidence:Math.max(...probs[i]),correct:a===pred[i]}))}}
+import type { LayersModel } from '@tensorflow/tfjs';
+import * as tf from '@tensorflow/tfjs';
+import type { EvaluationResult, TaskType } from '../data/datasetTypes';
+import type { LabelEncoderState } from '../preprocessing/LabelEncoder';
+import { classificationMetrics, regressionMetrics } from './metrics';
+
+export async function evaluateModel(model: LayersModel, x: number[][], actual: number[], task: TaskType, le: LabelEncoderState | null): Promise<EvaluationResult> {
+  const xs = tf.tensor2d(x);
+  const output = model.predict(xs) as tf.Tensor;
+  const raw = await output.array() as number[][];
+  tf.dispose([xs, output]);
+  if (task === 'regression') {
+    const p = raw.map(r => r[0]);
+    return {
+      metrics: regressionMetrics(actual, p),
+      examples: actual.slice(0, 50).map((a, i) => ({actual: a, predicted: p[i], error: p[i] - a}))
+    }
+  }
+  const probs = task === 'binary_classification' ? raw.map(r => [1 - r[0], r[0]]) : raw;
+  const pred = probs.map(r => r.indexOf(Math.max(...r)));
+  const m = classificationMetrics(actual, pred, le!.labels.length);
+  return {
+    metrics: {accuracy: m.accuracy, f1: m.f1},
+    confusionMatrix: m.confusionMatrix,
+    labels: le!.labels,
+    examples: actual.slice(0, 50).map((a, i) => ({
+      actual: le!.indexToLabel[a],
+      predicted: le!.indexToLabel[pred[i]],
+      confidence: Math.max(...probs[i]),
+      correct: a === pred[i]
+    }))
+  }
+}

@@ -4,18 +4,10 @@ import * as tf from "@tensorflow/tfjs";
 import { AppShell, Card, ErrorPanel } from "../components/layout/AppShell";
 import { getProject, saveProject } from "../storage/projectRepository";
 import type { ModelConfig, Project, TaskType } from "../data/datasetTypes";
-import {
-  fitPreprocessing,
-  transformRows,
-  transformTargets,
-} from "../preprocessing/buildFeatureMatrix";
+import { fitPreprocessing, transformRows, transformTargets } from "../preprocessing/buildFeatureMatrix";
 import { splitIndices } from "../ml/splitDataset";
 import { selectBackend } from "../ml/backend";
-import {
-  captureArtifacts,
-  type TrainingControl,
-  trainModel,
-} from "../ml/trainModel";
+import { captureArtifacts, type TrainingControl, trainModel } from "../ml/trainModel";
 import { evaluateModel } from "../ml/evaluateModel";
 import { exportProject } from "../storage/exportModel";
 import { useProjectStore } from "../state/projectStore";
@@ -28,22 +20,22 @@ const presets = {
     hiddenLayers: 1,
     unitsPerLayer: 32,
     batchSize: 32,
-    earlyStoppingPatience: 5,
+    earlyStoppingPatience: 5
   },
   balanced: {
     maxEpochs: 150,
     hiddenLayers: 1,
     unitsPerLayer: 64,
     batchSize: 16,
-    earlyStoppingPatience: 10,
+    earlyStoppingPatience: 10
   },
   thorough: {
     maxEpochs: 300,
     hiddenLayers: 2,
     unitsPerLayer: 128,
     batchSize: 16,
-    earlyStoppingPatience: 20,
-  },
+    earlyStoppingPatience: 20
+  }
 };
 
 function inferTask(p: Project, target: string): TaskType {
@@ -54,15 +46,15 @@ function inferTask(p: Project, target: string): TaskType {
 }
 
 export function ProjectPage() {
-  const { projectId } = useParams(),
+  const {projectId} = useParams(),
     nav = useNavigate();
-  const { project: p, setProject, setModel, model } = useProjectStore();
+  const {project: p, setProject, setModel, model} = useProjectStore();
   const [error, setError] = useState(""),
     [advanced, setAdvanced] = useState(false),
     [backend, setBackend] = useState("not initialized"),
     [preset, setPreset] = useState<keyof typeof presets>("balanced"),
     [analysisLoading, setAnalysisLoading] = useState(false),
-    trainingControl = useRef<TrainingControl>({ requested: false });
+    trainingControl = useRef<TrainingControl>({requested: false});
   useEffect(() => {
     if (projectId)
       getProject(projectId).then(async (x) => {
@@ -71,9 +63,10 @@ export function ProjectPage() {
         if (x.modelArtifacts)
           try {
             setModel(
-              await tf.loadLayersModel(tf.io.fromMemory(x.modelArtifacts)),
+              await tf.loadLayersModel(tf.io.fromMemory(x.modelArtifacts))
             );
-          } catch {}
+          } catch {
+          }
         if (x.targetName && x.dataset.rows.length && !x.relationships) {
           setAnalysisLoading(true);
           try {
@@ -81,7 +74,7 @@ export function ProjectPage() {
               x.dataset.rows,
               x.dataset.columns,
               x.targetName,
-              x.task,
+              x.task
             );
             const analyzed = {...x, relationships};
             setProject(analyzed);
@@ -90,7 +83,7 @@ export function ProjectPage() {
             setError(
               analysisError instanceof Error
                 ? analysisError.message
-                : String(analysisError),
+                : String(analysisError)
             );
           } finally {
             setAnalysisLoading(false);
@@ -110,7 +103,7 @@ export function ProjectPage() {
           c.name !== name &&
           c.selectedType !== "ignore" &&
           c.selectedType !== "date" &&
-          c.missingCount <= p.dataset.rowCount * 0.5,
+          c.missingCount <= p.dataset.rowCount * 0.5
       )
       .map((c) => c.name);
     const next = {
@@ -119,22 +112,22 @@ export function ProjectPage() {
       task,
       featureNames: recommended,
       relationships: undefined,
-      status: "idle" as const,
+      status: "idle" as const
     };
     setProject(next);
     setAnalysisLoading(true);
     await saveProject(next);
-
+    
     try {
       const relationships = await analyzeOffThread(
         p.dataset.rows,
         p.dataset.columns,
         name,
-        task,
+        task
       );
       const current = useProjectStore.getState().project;
       if (current?.targetName === name) {
-        const analyzed = { ...current, relationships };
+        const analyzed = {...current, relationships};
         setProject(analyzed);
         await saveProject(analyzed);
       }
@@ -142,7 +135,7 @@ export function ProjectPage() {
       setError(
         analysisError instanceof Error
           ? analysisError.message
-          : String(analysisError),
+          : String(analysisError)
       );
     } finally {
       setAnalysisLoading(false);
@@ -150,24 +143,24 @@ export function ProjectPage() {
   };
   const patch = (x: Partial<Project>) => {
     if (!p) return;
-    const next = { ...p, ...x };
+    const next = {...p, ...x};
     setProject(next);
     saveProject(next);
   };
   const setTask = async (task: TaskType) => {
     if (!p?.targetName) return;
-    patch({ task, relationships: undefined });
+    patch({task, relationships: undefined});
     setAnalysisLoading(true);
     try {
       const relationships = await analyzeOffThread(
         p.dataset.rows,
         p.dataset.columns,
         p.targetName,
-        task,
+        task
       );
       const current = useProjectStore.getState().project;
       if (current?.targetName === p.targetName && current.task === task) {
-        const analyzed = { ...current, relationships };
+        const analyzed = {...current, relationships};
         setProject(analyzed);
         await saveProject(analyzed);
       }
@@ -175,19 +168,19 @@ export function ProjectPage() {
       setError(
         analysisError instanceof Error
           ? analysisError.message
-          : String(analysisError),
+          : String(analysisError)
       );
     } finally {
       setAnalysisLoading(false);
     }
   };
   const config = (x: Partial<ModelConfig>) =>
-    patch({ modelConfig: { ...p!.modelConfig, ...x } });
+    patch({modelConfig: {...p!.modelConfig, ...x}});
   const stopTrainingNow = () => {
     trainingControl.current.requested = true;
     trainingControl.current.request?.();
     const current = useProjectStore.getState().project;
-    if (current) setProject({ ...current, status: "stopping" });
+    if (current) setProject({...current, status: "stopping"});
   };
   const train = async () => {
     if (!p || !target || !features.length)
@@ -195,12 +188,12 @@ export function ProjectPage() {
     setError("");
     trainingControl.current.requested = false;
     try {
-      patch({ status: "preparing", metrics: [] });
+      patch({status: "preparing", metrics: []});
       setBackend(await selectBackend());
       const valid = p.dataset.rows.filter(
         (r) =>
           r[p.targetName] != null &&
-          (p.task !== "regression" || Number.isFinite(Number(r[p.targetName]))),
+          (p.task !== "regression" || Number.isFinite(Number(r[p.targetName])))
       );
       if (valid.length < 4)
         throw Error("At least four rows with a valid target are needed.");
@@ -211,10 +204,10 @@ export function ProjectPage() {
         y,
         p.modelConfig.validationSplit,
         p.modelConfig.seed,
-        p.task !== "regression",
+        p.task !== "regression"
       );
-      const take = <T,>(a: T[], ids: number[]) => ids.map((i) => a[i]);
-      patch({ status: "training", preprocessing: prep });
+      const take = <T, >(a: T[], ids: number[]) => ids.map((i) => a[i]);
+      patch({status: "training", preprocessing: prep});
       const m = await trainModel(
         take(x, split.train),
         take(y, split.train),
@@ -226,9 +219,9 @@ export function ProjectPage() {
         (point) =>
           setProject({
             ...useProjectStore.getState().project!,
-            metrics: [...useProjectStore.getState().project!.metrics, point],
+            metrics: [...useProjectStore.getState().project!.metrics, point]
           }),
-        trainingControl.current,
+        trainingControl.current
       );
       setModel(m);
       const evaluation = await evaluateModel(
@@ -236,7 +229,7 @@ export function ProjectPage() {
         take(x, split.validation),
         take(y, split.validation),
         p.task,
-        prep.labelEncoder,
+        prep.labelEncoder
       );
       const artifacts = await captureArtifacts(m);
       const done = {
@@ -246,13 +239,13 @@ export function ProjectPage() {
           : "completed") as Project["status"],
         evaluation,
         modelArtifacts: artifacts,
-        preprocessing: prep,
+        preprocessing: prep
       };
       setProject(done);
       await saveProject(done);
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e));
-      patch({ status: "failed" });
+      patch({status: "failed"});
     }
   };
   if (!p)
@@ -265,7 +258,7 @@ export function ProjectPage() {
   const latest = p.metrics.at(-1);
   const epochProgress = Math.min(
     100,
-    Math.round(((latest?.epoch ?? 0) / p.modelConfig.maxEpochs) * 100),
+    Math.round(((latest?.epoch ?? 0) / p.modelConfig.maxEpochs) * 100)
   );
   const trainingProgress = p.status === "completed" ? 100 : epochProgress;
   return (
@@ -282,7 +275,7 @@ export function ProjectPage() {
             "Train",
             "Evaluate",
             "Predict",
-            "Export",
+            "Export"
           ].map((s, i) => (
             <div
               className={`aside-step ${i === 0 || (target && i < 2) || (p.relationships?.length && i < 4) || (p.status === "completed" && i < 9) ? "done" : ""}`}
@@ -368,26 +361,26 @@ export function ProjectPage() {
             patch({
               featureNames: (p.relationships ?? [])
                 .filter((item) => item.suggestedAction === "recommended")
-                .map((item) => item.fieldName),
+                .map((item) => item.fieldName)
             })
           }
           onIgnoreWeak={() =>
             patch({
               featureNames: p.featureNames.filter((name) => {
                 const relationship = p.relationships?.find(
-                  (item) => item.fieldName === name,
+                  (item) => item.fieldName === name
                 );
                 return (
                   relationship?.suggestedAction !== "weak_signal" &&
                   relationship?.suggestedAction !== "probably_ignore"
                 );
-              }),
+              })
             })
           }
           onContinue={() =>
             document
               .getElementById("feature-selection")
-              ?.scrollIntoView({ behavior: "smooth", block: "start" })
+              ?.scrollIntoView({behavior: "smooth", block: "start"})
           }
         />
       )}
@@ -409,9 +402,9 @@ export function ProjectPage() {
                           (c) =>
                             c.name !== p.targetName &&
                             c.selectedType !== "ignore" &&
-                            c.selectedType !== "date",
+                            c.selectedType !== "date"
                         )
-                        .map((c) => c.name),
+                        .map((c) => c.name)
                     })
                   }
                 >
@@ -419,7 +412,7 @@ export function ProjectPage() {
                 </button>
                 <button
                   className="text-btn"
-                  onClick={() => patch({ featureNames: [] })}
+                  onClick={() => patch({featureNames: []})}
                 >
                   Clear
                 </button>
@@ -437,7 +430,7 @@ export function ProjectPage() {
                         patch({
                           featureNames: e.target.checked
                             ? [...p.featureNames, c.name]
-                            : p.featureNames.filter((x) => x !== c.name),
+                            : p.featureNames.filter((x) => x !== c.name)
                         })
                       }
                     />
@@ -495,7 +488,7 @@ export function ProjectPage() {
                   value={p.modelConfig.optimizer}
                   onChange={(e) =>
                     config({
-                      optimizer: e.target.value as ModelConfig["optimizer"],
+                      optimizer: e.target.value as ModelConfig["optimizer"]
                     })
                   }
                 >
@@ -510,7 +503,7 @@ export function ProjectPage() {
                   type="number"
                   step=".001"
                   value={p.modelConfig.learningRate}
-                  onChange={(e) => config({ learningRate: +e.target.value })}
+                  onChange={(e) => config({learningRate: +e.target.value})}
                 />
               </label>
               <label>
@@ -520,7 +513,7 @@ export function ProjectPage() {
                   min="1"
                   max="5"
                   value={p.modelConfig.hiddenLayers}
-                  onChange={(e) => config({ hiddenLayers: +e.target.value })}
+                  onChange={(e) => config({hiddenLayers: +e.target.value})}
                 />
               </label>
               <label>
@@ -530,7 +523,7 @@ export function ProjectPage() {
                   min="4"
                   max="512"
                   value={p.modelConfig.unitsPerLayer}
-                  onChange={(e) => config({ unitsPerLayer: +e.target.value })}
+                  onChange={(e) => config({unitsPerLayer: +e.target.value})}
                 />
               </label>
               <label>
@@ -538,7 +531,7 @@ export function ProjectPage() {
                 <input
                   type="number"
                   value={p.modelConfig.batchSize}
-                  onChange={(e) => config({ batchSize: +e.target.value })}
+                  onChange={(e) => config({batchSize: +e.target.value})}
                 />
               </label>
               <label>
@@ -549,7 +542,7 @@ export function ProjectPage() {
                   max="40"
                   value={p.modelConfig.validationSplit * 100}
                   onChange={(e) =>
-                    config({ validationSplit: +e.target.value / 100 })
+                    config({validationSplit: +e.target.value / 100})
                   }
                 />
               </label>
@@ -558,14 +551,14 @@ export function ProjectPage() {
                 <input
                   type="number"
                   value={p.modelConfig.seed}
-                  onChange={(e) => config({ seed: +e.target.value })}
+                  onChange={(e) => config({seed: +e.target.value})}
                 />
               </label>
               <label className="check">
                 <input
                   type="checkbox"
                   checked={p.modelConfig.batchNorm}
-                  onChange={(e) => config({ batchNorm: e.target.checked })}
+                  onChange={(e) => config({batchNorm: e.target.checked})}
                 />{" "}
                 Batch normalization
               </label>
@@ -631,7 +624,7 @@ export function ProjectPage() {
               aria-valuemax={100}
               aria-valuenow={trainingProgress}
             >
-              <i style={{ width: `${trainingProgress}%` }} />
+              <i style={{width: `${trainingProgress}%`}} />
             </div>
             <b>{trainingProgress}%</b>
           </div>
@@ -654,7 +647,7 @@ export function ProjectPage() {
               <i
                 key={i}
                 style={{
-                  height: `${Math.max(3, 100 - (m.loss / (p.metrics[0].loss || 1)) * 80)}%`,
+                  height: `${Math.max(3, 100 - (m.loss / (p.metrics[0].loss || 1)) * 80)}%`
                 }}
                 title={`Epoch ${m.epoch}: ${m.loss}`}
               />
@@ -683,15 +676,15 @@ export function ProjectPage() {
               <h3>Confusion matrix</h3>
               <table>
                 <tbody>
-                  {p.evaluation.confusionMatrix.map((r, i) => (
-                    <tr key={i}>
-                      {r.map((n, j) => (
-                        <td key={j} className={i === j ? "hit" : ""}>
-                          {n}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
+                {p.evaluation.confusionMatrix.map((r, i) => (
+                  <tr key={i}>
+                    {r.map((n, j) => (
+                      <td key={j} className={i === j ? "hit" : ""}>
+                        {n}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
                 </tbody>
               </table>
             </div>
@@ -699,29 +692,29 @@ export function ProjectPage() {
           <div className="table-wrap">
             <table>
               <thead>
-                <tr>
-                  <th>Actual</th>
-                  <th>Predicted</th>
-                  <th>{p.task === "regression" ? "Error" : "Confidence"}</th>
-                </tr>
+              <tr>
+                <th>Actual</th>
+                <th>Predicted</th>
+                <th>{p.task === "regression" ? "Error" : "Confidence"}</th>
+              </tr>
               </thead>
               <tbody>
-                {p.evaluation.examples.slice(0, 12).map((x, i) => (
-                  <tr key={i}>
-                    <td>{x.actual}</td>
-                    <td>
-                      {typeof x.predicted === "number"
-                        ? x.predicted.toFixed(3)
-                        : x.predicted}
-                    </td>
-                    <td>
-                      {x.error?.toFixed(3) ??
-                        (x.confidence != null
-                          ? `${(x.confidence * 100).toFixed(1)}%`
-                          : "—")}
-                    </td>
-                  </tr>
-                ))}
+              {p.evaluation.examples.slice(0, 12).map((x, i) => (
+                <tr key={i}>
+                  <td>{x.actual}</td>
+                  <td>
+                    {typeof x.predicted === "number"
+                      ? x.predicted.toFixed(3)
+                      : x.predicted}
+                  </td>
+                  <td>
+                    {x.error?.toFixed(3) ??
+                      (x.confidence != null
+                        ? `${(x.confidence * 100).toFixed(1)}%`
+                        : "—")}
+                  </td>
+                </tr>
+              ))}
               </tbody>
             </table>
           </div>

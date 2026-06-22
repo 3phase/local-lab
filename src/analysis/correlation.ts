@@ -25,10 +25,10 @@ export function pearsonCorrelation(x: unknown[], y: unknown[]) {
 
 const ranks = (values: number[]) => {
   const sorted = values
-    .map((value, index) => ({ value, index }))
+    .map((value, index) => ({value, index}))
     .sort((a, b) => a.value - b.value);
   const output = Array(values.length).fill(0);
-  for (let i = 0; i < sorted.length; ) {
+  for (let i = 0; i < sorted.length;) {
     let end = i + 1;
     while (end < sorted.length && sorted[end].value === sorted[i].value) end++;
     const rank = (i + end - 1) / 2 + 1;
@@ -37,6 +37,7 @@ const ranks = (values: number[]) => {
   }
   return output;
 };
+
 export function spearmanCorrelation(x: unknown[], y: unknown[]) {
   const pairs = x
     .map((value, index) => [value, y[index]])
@@ -45,21 +46,21 @@ export function spearmanCorrelation(x: unknown[], y: unknown[]) {
   if (pairs.length < 2) return 0;
   return pearsonCorrelation(
     ranks(pairs.map((p) => p[0])),
-    ranks(pairs.map((p) => p[1])),
+    ranks(pairs.map((p) => p[1]))
   );
 }
 
 export function pointBiserialCorrelation(
   values: unknown[],
-  targets: unknown[],
+  targets: unknown[]
 ) {
   const labels = [
-    ...new Set(targets.filter((v) => v != null).map(String)),
+    ...new Set(targets.filter((v) => v != null).map(String))
   ].sort();
   if (labels.length !== 2) return 0;
   return pearsonCorrelation(
     values,
-    targets.map((v) => (v == null ? null : Number(String(v) === labels[1]))),
+    targets.map((v) => (v == null ? null : Number(String(v) === labels[1])))
   );
 }
 
@@ -114,7 +115,7 @@ export function cramersV(fields: unknown[], targets: unknown[]) {
         chi += ((cells.get(`${r}\0${c}`) ?? 0) - expected) ** 2 / expected;
     }
   return Math.sqrt(
-    chi / (pairs.length * Math.min(rows.length - 1, cols.length - 1)),
+    chi / (pairs.length * Math.min(rows.length - 1, cols.length - 1))
   );
 }
 

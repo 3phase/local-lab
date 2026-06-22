@@ -1,2 +1,20 @@
-export const regressionMetrics=(a:number[],p:number[])=>{const n=a.length,mae=a.reduce((s,x,i)=>s+Math.abs(x-p[i]),0)/n,mse=a.reduce((s,x,i)=>s+(x-p[i])**2,0)/n,mean=a.reduce((s,x)=>s+x,0)/n,ss=a.reduce((s,x)=>s+(x-mean)**2,0);return{mae,mse,rmse:Math.sqrt(mse),r2:ss?1-a.reduce((s,x,i)=>s+(x-p[i])**2,0)/ss:0}};
-export function classificationMetrics(a:number[],p:number[],classes:number){const cm=Array.from({length:classes},()=>Array(classes).fill(0));a.forEach((x,i)=>cm[x][p[i]]++);const accuracy=a.filter((x,i)=>x===p[i]).length/a.length;let f1=0;for(let c=0;c<classes;c++){const tp=cm[c][c],fp=cm.reduce((s,r,i)=>s+(i===c?0:r[c]),0),fn=cm[c].reduce((s,n,i)=>s+(i===c?0:n),0);const precision=tp/(tp+fp||1),recall=tp/(tp+fn||1);f1+=(2*precision*recall/(precision+recall||1))/classes}return{accuracy,f1,confusionMatrix:cm}}
+export const regressionMetrics = (a: number[], p: number[]) => {
+  const n = a.length, mae = a.reduce((s, x, i) => s + Math.abs(x - p[i]), 0) / n,
+    mse = a.reduce((s, x, i) => s + (x - p[i]) ** 2, 0) / n, mean = a.reduce((s, x) => s + x, 0) / n,
+    ss = a.reduce((s, x) => s + (x - mean) ** 2, 0);
+  return {mae, mse, rmse: Math.sqrt(mse), r2: ss ? 1 - a.reduce((s, x, i) => s + (x - p[i]) ** 2, 0) / ss : 0}
+};
+
+export function classificationMetrics(a: number[], p: number[], classes: number) {
+  const cm = Array.from({length: classes}, () => Array(classes).fill(0));
+  a.forEach((x, i) => cm[x][p[i]]++);
+  const accuracy = a.filter((x, i) => x === p[i]).length / a.length;
+  let f1 = 0;
+  for (let c = 0; c < classes; c++) {
+    const tp = cm[c][c], fp = cm.reduce((s, r, i) => s + (i === c ? 0 : r[c]), 0),
+      fn = cm[c].reduce((s, n, i) => s + (i === c ? 0 : n), 0);
+    const precision = tp / (tp + fp || 1), recall = tp / (tp + fn || 1);
+    f1 += (2 * precision * recall / (precision + recall || 1)) / classes
+  }
+  return {accuracy, f1, confusionMatrix: cm}
+}

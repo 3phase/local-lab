@@ -1,5 +1,42 @@
-import {describe,it,expect} from 'vitest';import {splitIndices} from './splitDataset';import {regressionMetrics,classificationMetrics} from './metrics';
-import {trainModel,type TrainingControl} from './trainModel';import {defaultConfig} from '../data/datasetTypes';
-describe('ML utilities',()=>{it('splits deterministically and stratifies',()=>{const a=splitIndices([0,0,0,1,1,1],.33,4,true),b=splitIndices([0,0,0,1,1,1],.33,4,true);expect(a).toEqual(b);expect(a.validation).toHaveLength(2)});it('computes regression metrics',()=>{const m=regressionMetrics([1,2,3],[1,2,4]);expect(m.mae).toBeCloseTo(1/3);expect(m.rmse).toBeCloseTo(Math.sqrt(1/3))});it('computes classification metrics',()=>{const m=classificationMetrics([0,0,1,1],[0,1,1,1],2);expect(m.accuracy).toBe(.75);expect(m.confusionMatrix).toEqual([[1,1],[0,2]])})})
+import { describe, expect, it } from 'vitest';
+import { splitIndices } from './splitDataset';
+import { classificationMetrics, regressionMetrics } from './metrics';
+import { type TrainingControl, trainModel } from './trainModel';
+import { defaultConfig } from '../data/datasetTypes';
 
-describe('training control',()=>{it('stops the active model when requested',async()=>{const control:TrainingControl={requested:false};let epochs=0;const model=await trainModel([[0],[1],[2],[3]],[0,1,2,3],[[4],[5]],[4,5],'regression',1,{...defaultConfig,maxEpochs:20,batchNorm:false,earlyStopping:false},()=>{epochs+=1;control.request?.()},control);expect(control.requested).toBe(true);expect(epochs).toBe(1);model.dispose()})})
+describe('ML utilities', () => {
+  it('splits deterministically and stratifies', () => {
+    const a = splitIndices([0, 0, 0, 1, 1, 1], .33, 4, true), b = splitIndices([0, 0, 0, 1, 1, 1], .33, 4, true);
+    expect(a).toEqual(b);
+    expect(a.validation).toHaveLength(2)
+  });
+  it('computes regression metrics', () => {
+    const m = regressionMetrics([1, 2, 3], [1, 2, 4]);
+    expect(m.mae).toBeCloseTo(1 / 3);
+    expect(m.rmse).toBeCloseTo(Math.sqrt(1 / 3))
+  });
+  it('computes classification metrics', () => {
+    const m = classificationMetrics([0, 0, 1, 1], [0, 1, 1, 1], 2);
+    expect(m.accuracy).toBe(.75);
+    expect(m.confusionMatrix).toEqual([[1, 1], [0, 2]])
+  })
+})
+
+describe('training control', () => {
+  it('stops the active model when requested', async () => {
+    const control: TrainingControl = {requested: false};
+    let epochs = 0;
+    const model = await trainModel([[0], [1], [2], [3]], [0, 1, 2, 3], [[4], [5]], [4, 5], 'regression', 1, {
+      ...defaultConfig,
+      maxEpochs: 20,
+      batchNorm: false,
+      earlyStopping: false
+    }, () => {
+      epochs += 1;
+      control.request?.()
+    }, control);
+    expect(control.requested).toBe(true);
+    expect(epochs).toBe(1);
+    model.dispose()
+  })
+})

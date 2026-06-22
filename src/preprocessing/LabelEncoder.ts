@@ -1,2 +1,15 @@
-export type LabelEncoderState={type:'LabelEncoder';labels:string[];labelToIndex:Record<string,number>;indexToLabel:Record<number,string>};
-export const fitLabels=(values:unknown[]):LabelEncoderState=>{const labels=[...new Set(values.filter(v=>v!=null).map(String))].sort();return{type:'LabelEncoder',labels,labelToIndex:Object.fromEntries(labels.map((x,i)=>[x,i])),indexToLabel:Object.fromEntries(labels.map((x,i)=>[i,x]))}};
+export type LabelEncoderState = {
+  type: 'LabelEncoder';
+  labels: string[];
+  labelToIndex: Record<string, number>;
+  indexToLabel: Record<number, string>
+};
+export const fitLabels = (values: unknown[]): LabelEncoderState => {
+  const labels = [...new Set(values.filter(v => v != null).map(String))].sort();
+  return {
+    type: 'LabelEncoder',
+    labels,
+    labelToIndex: Object.fromEntries(labels.map((x, i) => [x, i])),
+    indexToLabel: Object.fromEntries(labels.map((x, i) => [i, x]))
+  }
+};

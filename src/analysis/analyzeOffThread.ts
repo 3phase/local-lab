@@ -5,22 +5,22 @@ export function analyzeOffThread(
   rows: Record<string, unknown>[],
   columns: ColumnProfile[],
   targetName: string,
-  taskType: TaskType,
+  taskType: TaskType
 ): Promise<FieldRelationship[]> {
   if (typeof Worker === "undefined")
     return import("./relationshipScoring").then((m) =>
-      m.analyzeRelationships(rows, columns, targetName, taskType),
+      m.analyzeRelationships(rows, columns, targetName, taskType)
     );
   return new Promise((resolve, reject) => {
     const worker = new Worker(new URL("./analysisWorker.ts", import.meta.url), {
-      type: "module",
+      type: "module"
     });
     worker.onmessage = (
       event: MessageEvent<{
         type: string;
         relationships?: FieldRelationship[];
         message?: string;
-      }>,
+      }>
     ) => {
       worker.terminate();
       event.data.type === "complete"
@@ -31,6 +31,6 @@ export function analyzeOffThread(
       worker.terminate();
       reject(new Error(event.message || "Relationship analysis failed."));
     };
-    worker.postMessage({ rows, columns, targetName, taskType });
+    worker.postMessage({rows, columns, targetName, taskType});
   });
 }
